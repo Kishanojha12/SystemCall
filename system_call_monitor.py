@@ -73,11 +73,27 @@ class SystemCallMonitor:
         for conn in psutil.net_connections(kind='all'):
             try:
                 process = psutil.Process(conn.pid) if conn.pid else None
+                
+                # Handle formatting of addresses properly
+                local_addr = ""
+                if conn.laddr:
+                    if isinstance(conn.laddr, tuple) and len(conn.laddr) >= 2:
+                        local_addr = f"{conn.laddr[0]}:{conn.laddr[1]}"
+                    else:
+                        local_addr = str(conn.laddr)
+                
+                remote_addr = ""
+                if conn.raddr:
+                    if isinstance(conn.raddr, tuple) and len(conn.raddr) >= 2:
+                        remote_addr = f"{conn.raddr[0]}:{conn.raddr[1]}"
+                    else:
+                        remote_addr = str(conn.raddr)
+                
                 connections.append({
                     'pid': conn.pid,
                     'process_name': process.name() if process else "Unknown",
-                    'local_addr': f"{conn.laddr.ip}:{conn.laddr.port}" if conn.laddr else "",
-                    'remote_addr': f"{conn.raddr.ip}:{conn.raddr.port}" if conn.raddr else "",
+                    'local_addr': local_addr,
+                    'remote_addr': remote_addr,
                     'status': conn.status
                 })
             except (psutil.NoSuchProcess, psutil.AccessDenied):
